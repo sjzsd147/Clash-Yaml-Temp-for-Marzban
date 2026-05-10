@@ -22,6 +22,22 @@ dns:
   fake-ip-filter:
     - '*.lan'
     - 'localhost.ptlogin2.qq.com'
+  nameserver-policy:
+    "geosite:cn":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "geosite:microsoft":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "geosite:apple":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "rule-set:Microsoft":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "rule-set:Apple":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
   nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
