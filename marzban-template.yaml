@@ -1,0 +1,272 @@
+# ================= 基础配置 =================
+port: 7890
+socks-port: 7891
+mixed-port: 7897
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: true
+external-controller: 0.0.0.0:9090
+find-process-mode: strict
+
+# ================= DNS =================
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - 'localhost.ptlogin2.qq.com'
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+# ================= 节点列表 =================
+# 完美解决 IPv6 括号与 UUID 报错
+proxies:
+{{ conf.proxies | yaml | replace("'[", "'") | replace("]'", "'") }}
+
+# ================= 策略组 =================
+proxy-groups:
+  - name: "🚀 节点选择"
+    type: select
+    proxies:
+      - "♻️ 自动测速"
+      - "🎯 全局直连"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "♻️ 自动测速"
+    type: url-test
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    proxies:
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🎯 全局直连"
+    type: select
+    proxies:
+      - DIRECT
+
+  - name: "🛑 广告拦截"
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+  - name: "🤖 AI 专属"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "✈️ Telegram"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🎬 国际媒体"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🍎 苹果服务"
+    type: select
+    proxies:
+      - "🎯 全局直连"
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "Ⓜ️ 微软服务"
+    type: select
+    proxies:
+      - "🎯 全局直连"
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🎮 游戏平台"
+    type: select
+    proxies:
+      - "🎯 全局直连"
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "📺 哔哩哔哩"
+    type: select
+    proxies:
+      - "🎯 全局直连"
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🐟 漏网之鱼"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      - "🎯 全局直连"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+# ================= 规则集 =================
+rule-providers:
+  AdvertisingLite:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Classical.yaml"
+    path: ./ruleset/advertisinglite.yaml
+    interval: 86400
+  OpenAI:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
+    path: ./ruleset/openai.yaml
+    interval: 86400
+  Claude:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.yaml"
+    path: ./ruleset/claude.yaml
+    interval: 86400
+  Gemini:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml"
+    path: ./ruleset/gemini.yaml
+    interval: 86400
+  Copilot:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml"
+    path: ./ruleset/copilot.yaml
+    interval: 86400
+  GlobalMedia:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GlobalMedia/GlobalMedia_Classical.yaml"
+    path: ./ruleset/globalmedia.yaml
+    interval: 86400
+  Telegram:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
+    path: ./ruleset/telegram.yaml
+    interval: 86400
+  GitHub:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml"
+    path: ./ruleset/github.yaml
+    interval: 86400
+  Apple:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical.yaml"
+    path: ./ruleset/apple.yaml
+    interval: 86400
+  Microsoft:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml"
+    path: ./ruleset/microsoft.yaml
+    interval: 86400
+  Game:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/Game.yaml"
+    path: ./ruleset/game.yaml
+    interval: 86400
+  Lan:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml"
+    path: ./ruleset/lan.yaml
+    interval: 86400
+  Download:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download.yaml"
+    path: ./ruleset/download.yaml
+    interval: 86400
+  BiliBili:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.yaml"
+    path: ./ruleset/bilibili.yaml
+    interval: 86400
+  BiliBiliIntl:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBiliIntl/BiliBiliIntl.yaml"
+    path: ./ruleset/bilibiliintl.yaml
+    interval: 86400
+  ChinaMax:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml"
+    path: ./ruleset/chinamax.yaml
+    interval: 86400
+  Global:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Classical.yaml"
+    path: ./ruleset/global.yaml
+    interval: 86400
+
+# ================= 路由规则 =================
+rules:
+  # 优先处理局域网与BT下载
+  - RULE-SET,Lan,DIRECT
+  - RULE-SET,Download,DIRECT
+  - GEOSITE,private,DIRECT
+  - GEOIP,lan,DIRECT,no-resolve
+  - GEOIP,private,DIRECT,no-resolve
+
+  # 去广告
+  - RULE-SET,AdvertisingLite,🛑 广告拦截
+  - GEOSITE,category-ads-all,🛑 广告拦截
+
+  # AI 专属
+  - RULE-SET,OpenAI,🤖 AI 专属
+  - RULE-SET,Claude,🤖 AI 专属
+  - RULE-SET,Gemini,🤖 AI 专属
+  - RULE-SET,Copilot,🤖 AI 专属
+
+  # 特定服务分流
+  - RULE-SET,BiliBili,📺 哔哩哔哩
+  - RULE-SET,BiliBiliIntl,📺 哔哩哔哩
+  - RULE-SET,Telegram,✈️ Telegram
+  - RULE-SET,GitHub,🚀 节点选择
+  - RULE-SET,GlobalMedia,🎬 国际媒体
+  - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,Microsoft,Ⓜ️ 微软服务
+  - RULE-SET,Game,🎮 游戏平台
+
+  # 全球规则兜底 (包含各种国外常规网站)
+  - RULE-SET,Global,🚀 节点选择
+
+  # 内置 GEOSITE 作为补充防漏
+  - GEOSITE,telegram,✈️ Telegram
+  - GEOSITE,apple,🍎 苹果服务
+  - GEOSITE,microsoft,Ⓜ️ 微软服务
+  - GEOSITE,google,🚀 节点选择
+  - GEOSITE,twitter,🚀 节点选择
+  - GEOSITE,facebook,🚀 节点选择
+  - GEOSITE,instagram,🚀 节点选择
+
+  # 国内服务直连 (云端庞大规则库 + IP库兜底)
+  - RULE-SET,ChinaMax,🎯 全局直连
+  - GEOSITE,cn,🎯 全局直连
+  - GEOIP,CN,🎯 全局直连,no-resolve
+
+  # 最终兜底
+  - MATCH,🐟 漏网之鱼
