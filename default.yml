@@ -45,68 +45,18 @@ dns:
     - '*.msftconnecttest.com'
     - '*.msftncsi.com'
 
-  # 节点域名专用 DNS（防止循环解析）
+  # 节点域名专用 DNS
   proxy-server-nameserver:
+    - system
     - 223.5.5.5
     - 119.29.29.29
 
-  # 域名策略：匹配的域名走指定 DNS
-  nameserver-policy:
-    "geosite:private":
-      - 223.5.5.5
-      - 119.29.29.29
-    "geosite:cn":
-      - 223.5.5.5
-      - 119.29.29.29
-    "geosite:geolocation-!cn":
-      - https://1.1.1.1/dns-query
-      - https://dns.google/dns-query
-    "geosite:apple":
-      - 223.5.5.5
-      - 119.29.29.29
-    "geosite:microsoft":
-      - 223.5.5.5
-      - 119.29.29.29
-
-  # 主 DNS：国内 DNS
+  # 主 DNS：优先使用系统默认 DNS（直连域名）
   nameserver:
+    - system
     - 223.5.5.5
     - 119.29.29.29
 
-  # 备用 DNS：海外 DoH（防污染）
-  fallback:
-    - https://1.1.1.1/dns-query
-    - https://8.8.8.8/dns-query
-    - https://dns.google/dns-query
-
-  # fallback 触发条件
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    ipcidr:
-      - 0.0.0.0/8
-      - 10.0.0.0/8
-      - 100.64.0.0/10
-      - 127.0.0.0/8
-      - 169.254.0.0/16
-      - 172.16.0.0/12
-      - 192.0.0.0/24
-      - 192.168.0.0/16
-      - 224.0.0.0/4
-      - 240.0.0.0/4
-    domain:
-      - '+.google.com'
-      - '+.googleapis.com'
-      - '+.googlevideo.com'
-      - '+.gstatic.com'
-      - '+.youtube.com'
-      - '+.facebook.com'
-      - '+.twitter.com'
-      - '+.x.com'
-      - '+.instagram.com'
-      - '+.github.com'
-      - '+.githubusercontent.com'
-      - '+.telegram.org'
 
 # ================= 节点列表 =================
 # 完美解决 IPv6 括号与 UUID 报错
