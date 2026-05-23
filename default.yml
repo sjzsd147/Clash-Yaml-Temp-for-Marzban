@@ -1,3 +1,9 @@
+# ====================================================================
+#  Clash 全面分流模板 for Marzban
+#  规则源: blackmatrix7/ios_rule_script (jsdelivr CDN)
+#  更新: 规则集每 12 小时自动拉取
+# ====================================================================
+
 # ================= 基础配置 =================
 port: 7890
 socks-port: 7891
@@ -8,47 +14,103 @@ log-level: info
 ipv6: true
 external-controller: 0.0.0.0:9090
 find-process-mode: strict
+unified-delay: true
+tcp-concurrent: true
+global-client-fingerprint: chrome
+geodata-mode: true
 
 # ================= DNS =================
 dns:
   enable: true
   listen: 0.0.0.0:1053
   ipv6: true
+  use-hosts: true
+  use-system-hosts: true
+  prefer-h3: true
+
+  # 引导 DNS：纯 IP，用于解析 DoH 域名本身
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
+    - 1.1.1.1
+
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
     - '*.lan'
+    - '*.local'
+    - '*.localhost'
+    - '*.home.arpa'
     - 'localhost.ptlogin2.qq.com'
+    - 'localhost.sec.qq.com'
+    - 'connectivitycheck.gstatic.com'
+    - '*.msftconnecttest.com'
+    - '*.msftncsi.com'
+
+  # 节点域名专用 DNS（防止循环解析）
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+  # 域名策略：匹配的域名走指定 DNS
   nameserver-policy:
+    "geosite:private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
     "geosite:cn":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "geosite:geolocation-!cn":
+      - https://1.1.1.1/dns-query
+      - https://dns.google/dns-query
+    "geosite:apple":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
     "geosite:microsoft":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
-    "geosite:apple":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
-    "rule-set:Microsoft":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
-    "rule-set:Apple":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
+
+  # 主 DNS：国内 DoH
   nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
+
+  # 备用 DNS：海外 DoH（防污染）
   fallback:
     - https://1.1.1.1/dns-query
     - https://8.8.8.8/dns-query
+    - https://dns.google/dns-query
+
+  # fallback 触发条件
   fallback-filter:
     geoip: true
     geoip-code: CN
+    geosite:
+      - geosite:gfw
     ipcidr:
+      - 0.0.0.0/8
+      - 10.0.0.0/8
+      - 100.64.0.0/10
+      - 127.0.0.0/8
+      - 169.254.0.0/16
+      - 172.16.0.0/12
+      - 192.0.0.0/24
+      - 192.168.0.0/16
+      - 224.0.0.0/4
       - 240.0.0.0/4
+    domain:
+      - '+.google.com'
+      - '+.googleapis.com'
+      - '+.googlevideo.com'
+      - '+.gstatic.com'
+      - '+.youtube.com'
+      - '+.facebook.com'
+      - '+.twitter.com'
+      - '+.x.com'
+      - '+.instagram.com'
+      - '+.github.com'
+      - '+.githubusercontent.com'
+      - '+.telegram.org'
 
 # ================= 节点列表 =================
 # 完美解决 IPv6 括号与 UUID 报错
@@ -89,6 +151,18 @@ proxy-groups:
       - "🚀 节点选择"
       {{ proxy_remarks | yaml | indent(6) }}
 
+  - name: "📹 YouTube"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🔍 Google"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
   - name: "✈️ Telegram"
     type: select
     proxies:
@@ -98,6 +172,13 @@ proxy-groups:
   - name: "🎬 国际媒体"
     type: select
     proxies:
+      - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "📺 哔哩哔哩"
+    type: select
+    proxies:
+      - "🎯 全局直连"
       - "🚀 节点选择"
       {{ proxy_remarks | yaml | indent(6) }}
 
@@ -122,10 +203,16 @@ proxy-groups:
       - "🚀 节点选择"
       {{ proxy_remarks | yaml | indent(6) }}
 
-  - name: "📺 哔哩哔哩"
+  - name: "🛠️ 开发者工具"
     type: select
     proxies:
+      - "🚀 节点选择"
       - "🎯 全局直连"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "💰 金融服务"
+    type: select
+    proxies:
       - "🚀 节点选择"
       {{ proxy_remarks | yaml | indent(6) }}
 
@@ -138,6 +225,45 @@ proxy-groups:
 
 # ================= 规则集 =================
 rule-providers:
+  # ---------- 基础设施 ----------
+  Lan:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Lan/Lan.yaml"
+    path: ./ruleset/lan.yaml
+    interval: 43200
+  NTPService:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/NTPService/NTPService.yaml"
+    path: ./ruleset/ntpservice.yaml
+    interval: 43200
+  STUN:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/STUN/STUN.yaml"
+    path: ./ruleset/stun.yaml
+    interval: 43200
+  Download:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Download/Download.yaml"
+    path: ./ruleset/download.yaml
+    interval: 43200
+  PrivateTracker:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/PrivateTracker/PrivateTracker.yaml"
+    path: ./ruleset/privatetracker.yaml
+    interval: 43200
+  Speedtest:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Speedtest/Speedtest.yaml"
+    path: ./ruleset/speedtest.yaml
+    interval: 43200
+
+  # ---------- 广告/隐私/劫持 ----------
   AdvertisingLite:
     type: http
     behavior: classical
@@ -145,6 +271,27 @@ rule-providers:
     path: ./ruleset/advertisinglite.yaml
     interval: 43200
     proxy: "🚀 节点选择"
+  Privacy:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Privacy/Privacy_Classical.yaml"
+    path: ./ruleset/privacy.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Hijacking:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Hijacking/Hijacking.yaml"
+    path: ./ruleset/hijacking.yaml
+    interval: 43200
+  BlockHttpDNS:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BlockHttpDNS/BlockHttpDNS.yaml"
+    path: ./ruleset/blockhttpdns.yaml
+    interval: 43200
+
+  # ---------- AI 服务 ----------
   OpenAI:
     type: http
     behavior: classical
@@ -173,60 +320,69 @@ rule-providers:
     path: ./ruleset/copilot.yaml
     interval: 43200
     proxy: "🚀 节点选择"
+  Anthropic:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Anthropic/Anthropic.yaml"
+    path: ./ruleset/anthropic.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  BardAI:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BardAI/BardAI.yaml"
+    path: ./ruleset/bardai.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+
+  # ---------- 流媒体 ----------
+  YouTube:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/YouTube/YouTube.yaml"
+    path: ./ruleset/youtube.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  YouTubeMusic:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/YouTubeMusic/YouTubeMusic.yaml"
+    path: ./ruleset/youtubemusic.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Netflix:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Netflix/Netflix_Classical.yaml"
+    path: ./ruleset/netflix.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Spotify:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Spotify/Spotify.yaml"
+    path: ./ruleset/spotify.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  TikTok:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TikTok/TikTok.yaml"
+    path: ./ruleset/tiktok.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Disney:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Disney/Disney.yaml"
+    path: ./ruleset/disney.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
   GlobalMedia:
     type: http
     behavior: classical
     url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia_Classical.yaml"
     path: ./ruleset/globalmedia.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Telegram:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml"
-    path: ./ruleset/telegram.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  GitHub:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GitHub/GitHub.yaml"
-    path: ./ruleset/github.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Apple:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple_Classical.yaml"
-    path: ./ruleset/apple.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Microsoft:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml"
-    path: ./ruleset/microsoft.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Game:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Game/Game.yaml"
-    path: ./ruleset/game.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Lan:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Lan/Lan.yaml"
-    path: ./ruleset/lan.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
-  Download:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Download/Download.yaml"
-    path: ./ruleset/download.yaml
     interval: 43200
     proxy: "🚀 节点选择"
   BiliBili:
@@ -235,12 +391,194 @@ rule-providers:
     url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml"
     path: ./ruleset/bilibili.yaml
     interval: 43200
-    proxy: "🚀 节点选择"
   BiliBiliIntl:
     type: http
     behavior: classical
     url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBiliIntl/BiliBiliIntl.yaml"
     path: ./ruleset/bilibiliintl.yaml
+    interval: 43200
+  Emby:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Emby/Emby.yaml"
+    path: ./ruleset/emby.yaml
+    interval: 43200
+  ChinaMedia:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/ChinaMedia/ChinaMedia.yaml"
+    path: ./ruleset/chinamedia.yaml
+    interval: 43200
+
+  # ---------- 社交/通讯 ----------
+  Telegram:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml"
+    path: ./ruleset/telegram.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Discord:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Discord/Discord.yaml"
+    path: ./ruleset/discord.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Twitter:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Twitter/Twitter.yaml"
+    path: ./ruleset/twitter.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Facebook:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Facebook/Facebook.yaml"
+    path: ./ruleset/facebook.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Instagram:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Instagram/Instagram.yaml"
+    path: ./ruleset/instagram.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Reddit:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Reddit/Reddit.yaml"
+    path: ./ruleset/reddit.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Whatsapp:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Whatsapp/Whatsapp.yaml"
+    path: ./ruleset/whatsapp.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+
+  # ---------- 科技服务 ----------
+  Google:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Google/Google.yaml"
+    path: ./ruleset/google.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  GoogleFCM:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GoogleFCM/GoogleFCM.yaml"
+    path: ./ruleset/googlefcm.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Apple:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple_Classical.yaml"
+    path: ./ruleset/apple.yaml
+    interval: 43200
+  Microsoft:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml"
+    path: ./ruleset/microsoft.yaml
+    interval: 43200
+  OneDrive:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/OneDrive/OneDrive.yaml"
+    path: ./ruleset/onedrive.yaml
+    interval: 43200
+
+  # ---------- 开发者工具 ----------
+  GitHub:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GitHub/GitHub.yaml"
+    path: ./ruleset/github.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Docker:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Docker/Docker.yaml"
+    path: ./ruleset/docker.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Developer:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Developer/Developer.yaml"
+    path: ./ruleset/developer.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+
+  # ---------- 游戏平台 ----------
+  Game:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Game/Game.yaml"
+    path: ./ruleset/game.yaml
+    interval: 43200
+  Steam:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Steam/Steam.yaml"
+    path: ./ruleset/steam.yaml
+    interval: 43200
+  Epic:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Epic/Epic.yaml"
+    path: ./ruleset/epic.yaml
+    interval: 43200
+  Nintendo:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Nintendo/Nintendo.yaml"
+    path: ./ruleset/nintendo.yaml
+    interval: 43200
+  PlayStation:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/PlayStation/PlayStation.yaml"
+    path: ./ruleset/playstation.yaml
+    interval: 43200
+
+  # ---------- 金融服务 ----------
+  PayPal:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/PayPal/PayPal.yaml"
+    path: ./ruleset/paypal.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Cryptocurrency:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Cryptocurrency/Cryptocurrency.yaml"
+    path: ./ruleset/cryptocurrency.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  Binance:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Binance/Binance.yaml"
+    path: ./ruleset/binance.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+
+  # ---------- 兜底规则 ----------
+  Global:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Global/Global_Classical.yaml"
+    path: ./ruleset/global.yaml
     interval: 43200
     proxy: "🚀 节点选择"
   ChinaMax:
@@ -249,60 +587,95 @@ rule-providers:
     url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml"
     path: ./ruleset/chinamax.yaml
     interval: 43200
-    proxy: "🚀 节点选择"
-  Global:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Global/Global_Classical.yaml"
-    path: ./ruleset/global.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
 
 # ================= 路由规则 =================
+# 优先级: 精确匹配 → 功能分流 → 兜底规则
+# 规则间冲突说明:
+#   - AdvertisingLite 已排除 Hijacking/Privacy，不重复
+#   - Google 已排除 YouTube/YouTubeMusic，不冲突
+#   - ChinaMax 已排除 Microsoft/GitHub/OneDrive/Steam/PayPal/YouTube 等，不冲突
+#   - Global 已排除 AdvertisingLite/China/ChinaMaxNoIP，不冲突
+#   - 精确规则放前面，兜底规则放后面，先匹配到的生效
 rules:
-  # 优先处理局域网与BT下载
+  # -------- 1. 基础设施（直连）--------
   - RULE-SET,Lan,DIRECT
+  - RULE-SET,NTPService,DIRECT
+  - RULE-SET,STUN,DIRECT
   - RULE-SET,Download,DIRECT
+  - RULE-SET,PrivateTracker,DIRECT
+  - RULE-SET,Speedtest,DIRECT
   - GEOSITE,private,DIRECT
   - GEOIP,lan,DIRECT,no-resolve
   - GEOIP,private,DIRECT,no-resolve
 
-  # 去广告
+  # -------- 2. 广告/隐私/劫持（拦截）--------
   - RULE-SET,AdvertisingLite,🛑 广告拦截
-  - GEOSITE,category-ads-all,🛑 广告拦截
+  - RULE-SET,Privacy,🛑 广告拦截
+  - RULE-SET,Hijacking,🛑 广告拦截
+  - RULE-SET,BlockHttpDNS,🛑 广告拦截
 
-  # AI 专属
+  # -------- 3. Emby 自建服务（直连）--------
+  - RULE-SET,Emby,DIRECT
+
+  # -------- 4. AI 服务（代理）--------
   - RULE-SET,OpenAI,🤖 AI 专属
   - RULE-SET,Claude,🤖 AI 专属
   - RULE-SET,Gemini,🤖 AI 专属
+  - RULE-SET,BardAI,🤖 AI 专属
   - RULE-SET,Copilot,🤖 AI 专属
+  - RULE-SET,Anthropic,🤖 AI 专属
 
-  # 特定服务分流
+  # -------- 5. 流媒体 --------
+  - RULE-SET,YouTube,📹 YouTube
+  - RULE-SET,YouTubeMusic,📹 YouTube
+  - RULE-SET,Netflix,🎬 国际媒体
+  - RULE-SET,Disney,🎬 国际媒体
+  - RULE-SET,Spotify,🎬 国际媒体
+  - RULE-SET,TikTok,🎬 国际媒体
   - RULE-SET,BiliBili,📺 哔哩哔哩
   - RULE-SET,BiliBiliIntl,📺 哔哩哔哩
+  - RULE-SET,ChinaMedia,DIRECT
+
+  # -------- 6. 社交/通讯 --------
   - RULE-SET,Telegram,✈️ Telegram
-  - RULE-SET,GitHub,🚀 节点选择
-  - RULE-SET,GlobalMedia,🎬 国际媒体
+  - RULE-SET,Discord,🚀 节点选择
+  - RULE-SET,Twitter,🚀 节点选择
+  - RULE-SET,Facebook,🚀 节点选择
+  - RULE-SET,Instagram,🚀 节点选择
+  - RULE-SET,Reddit,🚀 节点选择
+  - RULE-SET,Whatsapp,🚀 节点选择
+
+  # -------- 7. 金融服务 --------
+  - RULE-SET,PayPal,💰 金融服务
+  - RULE-SET,Cryptocurrency,💰 金融服务
+  - RULE-SET,Binance,💰 金融服务
+
+  # -------- 8. 科技服务 --------
+  - RULE-SET,GoogleFCM,🔍 Google
+  - RULE-SET,Google,🔍 Google
   - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,OneDrive,Ⓜ️ 微软服务
   - RULE-SET,Microsoft,Ⓜ️ 微软服务
+
+  # -------- 9. 开发者工具 --------
+  - RULE-SET,GitHub,🛠️ 开发者工具
+  - RULE-SET,Docker,🛠️ 开发者工具
+  - RULE-SET,Developer,🛠️ 开发者工具
+
+  # -------- 10. 游戏平台 --------
+  - RULE-SET,Steam,🎮 游戏平台
+  - RULE-SET,Epic,🎮 游戏平台
+  - RULE-SET,Nintendo,🎮 游戏平台
+  - RULE-SET,PlayStation,🎮 游戏平台
   - RULE-SET,Game,🎮 游戏平台
 
-  # 全球规则兜底 (包含各种国外常规网站)
+  # -------- 11. 全球代理兜底 --------
   - RULE-SET,Global,🚀 节点选择
 
-  # 内置 GEOSITE 作为补充防漏
-  - GEOSITE,telegram,✈️ Telegram
-  - GEOSITE,apple,🍎 苹果服务
-  - GEOSITE,microsoft,Ⓜ️ 微软服务
-  - GEOSITE,google,🚀 节点选择
-  - GEOSITE,twitter,🚀 节点选择
-  - GEOSITE,facebook,🚀 节点选择
-  - GEOSITE,instagram,🚀 节点选择
-
-  # 国内服务直连 (云端庞大规则库 + IP库兜底)
+  # -------- 12. 国内直连兜底 --------
   - RULE-SET,ChinaMax,🎯 全局直连
   - GEOSITE,cn,🎯 全局直连
   - GEOIP,CN,🎯 全局直连,no-resolve
 
-  # 最终兜底
+  # -------- 13. 最终兜底 --------
   - MATCH,🐟 漏网之鱼
