@@ -12,7 +12,7 @@ allow-lan: true
 mode: rule
 log-level: info
 ipv6: true
-external-controller: '0.0.0.0:9090'
+external-controller: '127.0.0.1:9090'
 find-process-mode: strict
 unified-delay: true
 tcp-concurrent: true
@@ -30,20 +30,41 @@ dns:
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - 1.1.1.1
 
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
+    # 本地/局域网
     - '*.lan'
     - '*.local'
     - '*.localhost'
     - '*.home.arpa'
+    # 腾讯登录
     - 'localhost.ptlogin2.qq.com'
     - 'localhost.sec.qq.com'
+    # 网络连通性检测
     - 'connectivitycheck.gstatic.com'
     - '*.msftconnecttest.com'
     - '*.msftncsi.com'
+    # NTP 时间同步
+    - 'time.*.com'
+    - 'time.*.gov'
+    - 'time.*.edu.cn'
+    - 'time.*.apple.com'
+    - 'time-ios.apple.com'
+    - 'time-macos.apple.com'
+    - 'ntp.*.com'
+    - '*.pool.ntp.org'
+    - 'ntp.aliyun.com'
+    - 'ntp.tencent.com'
+    # Apple 推送/服务
+    - '*.push.apple.com'
+    - 'push.apple.com'
+    # 游戏相关
+    - '*.battlenet.com.cn'
+    - '*.blzstatic.cn'
+    - '*.battle.net'
+    - 'stun.l.google.com'
 
   # 节点域名专用 DNS
   proxy-server-nameserver:
@@ -56,6 +77,16 @@ dns:
     - system
     - 223.5.5.5
     - 119.29.29.29
+
+  # 回退 DNS：用于被污染域名的二次解析
+  fallback:
+    - tls://8.8.4.4
+    - tls://1.1.1.1
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
 
 
 # ================= 节点列表 =================
@@ -126,6 +157,13 @@ proxy-groups:
     proxies:
       - "🎯 全局直连"
       - "🚀 节点选择"
+      {{ proxy_remarks | yaml | indent(6) }}
+
+  - name: "🍎 苹果媒体"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      - "🎯 全局直连"
       {{ proxy_remarks | yaml | indent(6) }}
 
   - name: "🍎 苹果服务"
@@ -267,13 +305,7 @@ rule-providers:
     path: ./ruleset/anthropic.yaml
     interval: 43200
     proxy: "🚀 节点选择"
-  BardAI:
-    type: http
-    behavior: classical
-    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BardAI/BardAI.yaml"
-    path: ./ruleset/bardai.yaml
-    interval: 43200
-    proxy: "🚀 节点选择"
+
 
   # ---------- 流媒体 ----------
   YouTube:
@@ -416,6 +448,82 @@ rule-providers:
     path: ./ruleset/googlefcm.yaml
     interval: 43200
     proxy: "🚀 节点选择"
+  # ---- 苹果媒体（需代理）----
+  AppleTV:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppleTV/AppleTV.yaml"
+    path: ./ruleset/appletv.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  AppleMusic:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppleMusic/AppleMusic.yaml"
+    path: ./ruleset/applemusic.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  AppleNews:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppleNews/AppleNews.yaml"
+    path: ./ruleset/applenews.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  FitnessPlus:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/FitnessPlus/FitnessPlus.yaml"
+    path: ./ruleset/fitnessplus.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+  AppleProxy:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppleProxy/AppleProxy.yaml"
+    path: ./ruleset/appleproxy.yaml
+    interval: 43200
+    proxy: "🚀 节点选择"
+
+  # ---- 苹果直连服务 ----
+  iCloud:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/iCloud/iCloud.yaml"
+    path: ./ruleset/icloud.yaml
+    interval: 43200
+  AppStore:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppStore/AppStore.yaml"
+    path: ./ruleset/appstore.yaml
+    interval: 43200
+  AppleMail:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AppleMail/AppleMail.yaml"
+    path: ./ruleset/applemail.yaml
+    interval: 43200
+  Siri:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Siri/Siri.yaml"
+    path: ./ruleset/siri.yaml
+    interval: 43200
+  TestFlight:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TestFlight/TestFlight.yaml"
+    path: ./ruleset/testflight.yaml
+    interval: 43200
+  iCloudPrivateRelay:
+    type: http
+    behavior: classical
+    url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/iCloudPrivateRelay/iCloudPrivateRelay.yaml"
+    path: ./ruleset/icloudprivaterelay.yaml
+    interval: 43200
+
+  # ---- 苹果总规则（兜底）----
   Apple:
     type: http
     behavior: classical
@@ -533,6 +641,8 @@ rule-providers:
 # 规则间冲突说明:
 #   - AdvertisingLite 已排除 Hijacking/Privacy，不重复
 #   - Google 已排除 YouTube/YouTubeMusic，不冲突
+#   - GlobalMedia 已包含 YouTube/YouTubeMusic，放在各精确流媒体规则之后作为兜底
+#   - Apple 子规则(AppleTV/Music/News等)在 Apple 总规则前匹配，确保精确分流
 #   - ChinaMax 已排除 Microsoft/GitHub/OneDrive/Steam/PayPal/YouTube 等，不冲突
 #   - Global 已排除 AdvertisingLite/China/ChinaMaxNoIP，不冲突
 #   - 精确规则放前面，兜底规则放后面，先匹配到的生效
@@ -560,7 +670,6 @@ rules:
   - RULE-SET,OpenAI,🤖 AI 专属
   - RULE-SET,Claude,🤖 AI 专属
   - RULE-SET,Gemini,🤖 AI 专属
-  - RULE-SET,BardAI,🤖 AI 专属
   - RULE-SET,Copilot,🤖 AI 专属
   - RULE-SET,Anthropic,🤖 AI 专属
 
@@ -571,6 +680,7 @@ rules:
   - RULE-SET,Disney,🎬 国际媒体
   - RULE-SET,Spotify,🎬 国际媒体
   - RULE-SET,TikTok,🎬 国际媒体
+  - RULE-SET,GlobalMedia,🎬 国际媒体
   - RULE-SET,BiliBili,📺 哔哩哔哩
   - RULE-SET,BiliBiliIntl,📺 哔哩哔哩
   - RULE-SET,ChinaMedia,DIRECT
@@ -592,6 +702,18 @@ rules:
   # -------- 8. 科技服务 --------
   - RULE-SET,GoogleFCM,🔍 Google
   - RULE-SET,Google,🔍 Google
+  # ---- 苹果服务（精确分流）----
+  - RULE-SET,AppleTV,🍎 苹果媒体
+  - RULE-SET,AppleMusic,🍎 苹果媒体
+  - RULE-SET,AppleNews,🍎 苹果媒体
+  - RULE-SET,FitnessPlus,🍎 苹果媒体
+  - RULE-SET,AppleProxy,🍎 苹果媒体
+  - RULE-SET,iCloud,🍎 苹果服务
+  - RULE-SET,AppStore,🍎 苹果服务
+  - RULE-SET,AppleMail,🍎 苹果服务
+  - RULE-SET,Siri,🍎 苹果服务
+  - RULE-SET,TestFlight,🍎 苹果服务
+  - RULE-SET,iCloudPrivateRelay,🍎 苹果服务
   - RULE-SET,Apple,🍎 苹果服务
   - RULE-SET,OneDrive,Ⓜ️ 微软服务
   - RULE-SET,Microsoft,Ⓜ️ 微软服务
