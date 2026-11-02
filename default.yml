@@ -636,97 +636,104 @@ rule-providers:
 #   - ChinaMax 已排除 Microsoft/GitHub/OneDrive/Steam/PayPal/YouTube 等，不冲突
 #   - Global 已排除 AdvertisingLite/China/ChinaMaxNoIP，不冲突
 #   - 精确规则放前面，兜底规则放后面，先匹配到的生效
+# 防 DNS 污染说明:
+#   - 所有 RULE-SET 均加 no-resolve。这些规则集内含 IP-CIDR，若不加 no-resolve，
+#     mihomo 会在域名规则匹配前用国内 DNS 解析域名；被污染的域名(如 google.com
+#     在校园网/国内 DNS 下返回 0.0.0.0 / ::)会随即命中 GEOIP,lan → DIRECT，
+#     导致本应走代理的流量被直连。加 no-resolve 后 IP 规则只对直接以 IP 访问的连接生效。
 rules:
   # -------- 1. 基础设施（直连）--------
-  - RULE-SET,Lan,DIRECT
-  - RULE-SET,NTPService,DIRECT
-  - RULE-SET,STUN,DIRECT
-  - RULE-SET,Download,DIRECT
-  - RULE-SET,PrivateTracker,DIRECT
+  - RULE-SET,Lan,DIRECT,no-resolve
+  - RULE-SET,NTPService,DIRECT,no-resolve
+  - RULE-SET,STUN,DIRECT,no-resolve
+  - RULE-SET,Download,DIRECT,no-resolve
+  - RULE-SET,PrivateTracker,DIRECT,no-resolve
   - GEOSITE,private,DIRECT
   - GEOIP,lan,DIRECT,no-resolve
   - GEOIP,private,DIRECT,no-resolve
 
   # -------- 2. 广告/隐私/劫持（拦截）--------
-  - RULE-SET,AdvertisingLite,🛑 广告拦截
-  - RULE-SET,Privacy,🛑 广告拦截
-  - RULE-SET,Hijacking,🛑 广告拦截
-  - RULE-SET,BlockHttpDNS,🛑 广告拦截
+  - RULE-SET,AdvertisingLite,🛑 广告拦截,no-resolve
+  - RULE-SET,Privacy,🛑 广告拦截,no-resolve
+  - RULE-SET,Hijacking,🛑 广告拦截,no-resolve
+  - RULE-SET,BlockHttpDNS,🛑 广告拦截,no-resolve
 
   # -------- 3. Emby 自建服务（直连）--------
-  - RULE-SET,Emby,DIRECT
+  - RULE-SET,Emby,DIRECT,no-resolve
 
   # -------- 4. AI 服务（代理）--------
-  - RULE-SET,OpenAI,🤖 AI 专属
-  - RULE-SET,Claude,🤖 AI 专属
-  - RULE-SET,Gemini,🤖 AI 专属
-  - RULE-SET,Copilot,🤖 AI 专属
-  - RULE-SET,Anthropic,🤖 AI 专属
+  - RULE-SET,OpenAI,🤖 AI 专属,no-resolve
+  - RULE-SET,Claude,🤖 AI 专属,no-resolve
+  - RULE-SET,Gemini,🤖 AI 专属,no-resolve
+  - RULE-SET,Copilot,🤖 AI 专属,no-resolve
+  - RULE-SET,Anthropic,🤖 AI 专属,no-resolve
 
   # -------- 5. 流媒体 --------
-  - RULE-SET,YouTube,📹 YouTube
-  - RULE-SET,YouTubeMusic,📹 YouTube
-  - RULE-SET,Netflix,🎬 国际媒体
-  - RULE-SET,Disney,🎬 国际媒体
-  - RULE-SET,Spotify,🎬 国际媒体
-  - RULE-SET,TikTok,🎬 国际媒体
-  - RULE-SET,GlobalMedia,🎬 国际媒体
-  - RULE-SET,BiliBili,📺 哔哩哔哩
-  - RULE-SET,BiliBiliIntl,📺 哔哩哔哩
-  - RULE-SET,ChinaMedia,DIRECT
+  - RULE-SET,YouTube,📹 YouTube,no-resolve
+  - RULE-SET,YouTubeMusic,📹 YouTube,no-resolve
+  - RULE-SET,Netflix,🎬 国际媒体,no-resolve
+  - RULE-SET,Disney,🎬 国际媒体,no-resolve
+  - RULE-SET,Spotify,🎬 国际媒体,no-resolve
+  - RULE-SET,TikTok,🎬 国际媒体,no-resolve
+  - RULE-SET,GlobalMedia,🎬 国际媒体,no-resolve
+  - RULE-SET,BiliBili,📺 哔哩哔哩,no-resolve
+  - RULE-SET,BiliBiliIntl,📺 哔哩哔哩,no-resolve
+  - RULE-SET,ChinaMedia,DIRECT,no-resolve
 
   # -------- 6. 社交/通讯 --------
-  - RULE-SET,Telegram,✈️ Telegram
-  - RULE-SET,Discord,🚀 节点选择
-  - RULE-SET,Twitter,🚀 节点选择
-  - RULE-SET,Facebook,🚀 节点选择
-  - RULE-SET,Instagram,🚀 节点选择
-  - RULE-SET,Reddit,🚀 节点选择
-  - RULE-SET,Whatsapp,🚀 节点选择
+  - RULE-SET,Telegram,✈️ Telegram,no-resolve
+  - RULE-SET,Discord,🚀 节点选择,no-resolve
+  - RULE-SET,Twitter,🚀 节点选择,no-resolve
+  - RULE-SET,Facebook,🚀 节点选择,no-resolve
+  - RULE-SET,Instagram,🚀 节点选择,no-resolve
+  - RULE-SET,Reddit,🚀 节点选择,no-resolve
+  - RULE-SET,Whatsapp,🚀 节点选择,no-resolve
 
   # -------- 7. 金融服务 --------
-  - RULE-SET,PayPal,💰 金融服务
-  - RULE-SET,Cryptocurrency,💰 金融服务
-  - RULE-SET,Binance,💰 金融服务
+  - RULE-SET,PayPal,💰 金融服务,no-resolve
+  - RULE-SET,Cryptocurrency,💰 金融服务,no-resolve
+  - RULE-SET,Binance,💰 金融服务,no-resolve
 
   # -------- 8. 科技服务 --------
-  - RULE-SET,GoogleFCM,🔍 Google
-  - RULE-SET,Google,🔍 Google
+  - RULE-SET,GoogleFCM,🔍 Google,no-resolve
+  - RULE-SET,Google,🔍 Google,no-resolve
   # ---- 苹果服务（精确分流）----
-  - RULE-SET,AppleTV,🍎 苹果媒体
-  - RULE-SET,AppleMusic,🍎 苹果媒体
-  - RULE-SET,AppleNews,🍎 苹果媒体
-  - RULE-SET,FitnessPlus,🍎 苹果媒体
-  - RULE-SET,AppleProxy,🍎 苹果媒体
-  - RULE-SET,iCloud,🍎 苹果服务
-  - RULE-SET,AppStore,🍎 苹果服务
-  - RULE-SET,AppleMail,🍎 苹果服务
-  - RULE-SET,Siri,🍎 苹果服务
-  - RULE-SET,TestFlight,🍎 苹果服务
-  - RULE-SET,iCloudPrivateRelay,🍎 苹果服务
-  - RULE-SET,Apple,🍎 苹果服务
-  - RULE-SET,OneDrive,Ⓜ️ 微软服务
-  - RULE-SET,Microsoft,Ⓜ️ 微软服务
+  - RULE-SET,AppleTV,🍎 苹果媒体,no-resolve
+  - RULE-SET,AppleMusic,🍎 苹果媒体,no-resolve
+  - RULE-SET,AppleNews,🍎 苹果媒体,no-resolve
+  - RULE-SET,FitnessPlus,🍎 苹果媒体,no-resolve
+  - RULE-SET,AppleProxy,🍎 苹果媒体,no-resolve
+  - RULE-SET,iCloud,🍎 苹果服务,no-resolve
+  - RULE-SET,AppStore,🍎 苹果服务,no-resolve
+  - RULE-SET,AppleMail,🍎 苹果服务,no-resolve
+  - RULE-SET,Siri,🍎 苹果服务,no-resolve
+  - RULE-SET,TestFlight,🍎 苹果服务,no-resolve
+  - RULE-SET,iCloudPrivateRelay,🍎 苹果服务,no-resolve
+  - RULE-SET,Apple,🍎 苹果服务,no-resolve
+  - RULE-SET,OneDrive,Ⓜ️ 微软服务,no-resolve
+  - RULE-SET,Microsoft,Ⓜ️ 微软服务,no-resolve
 
   # -------- 9. 开发者工具 --------
-  - RULE-SET,GitHub,🛠️ 开发者工具
-  - RULE-SET,Docker,🛠️ 开发者工具
-  - RULE-SET,Developer,🛠️ 开发者工具
+  - RULE-SET,GitHub,🛠️ 开发者工具,no-resolve
+  - RULE-SET,Docker,🛠️ 开发者工具,no-resolve
+  - RULE-SET,Developer,🛠️ 开发者工具,no-resolve
 
   # -------- 10. 游戏平台 --------
-  - RULE-SET,Steam,🎮 游戏平台
-  - RULE-SET,Epic,🎮 游戏平台
-  - RULE-SET,Nintendo,🎮 游戏平台
-  - RULE-SET,PlayStation,🎮 游戏平台
-  - RULE-SET,Game,🎮 游戏平台
+  - RULE-SET,Steam,🎮 游戏平台,no-resolve
+  - RULE-SET,Epic,🎮 游戏平台,no-resolve
+  - RULE-SET,Nintendo,🎮 游戏平台,no-resolve
+  - RULE-SET,PlayStation,🎮 游戏平台,no-resolve
+  - RULE-SET,Game,🎮 游戏平台,no-resolve
 
   # -------- 11. 全球代理兜底 --------
-  - RULE-SET,Global,🚀 节点选择
+  - RULE-SET,Global,🚀 节点选择,no-resolve
 
   # -------- 12. 国内直连兜底 --------
-  - RULE-SET,ChinaMax,🎯 全局直连
+  - RULE-SET,ChinaMax,🎯 全局直连,no-resolve
   - GEOSITE,cn,🎯 全局直连
-  - GEOIP,CN,🎯 全局直连,no-resolve
+  # 末尾不加 no-resolve：未收录的域名在此解析一次，国内 IP 直连；
+  # 污染返回的 0.0.0.0 / 境外 IP 不会命中 CN，前面也已无 IP 规则可误中
+  - GEOIP,CN,🎯 全局直连
 
   # -------- 13. 最终兜底 --------
   - MATCH,🐟 漏网之鱼
